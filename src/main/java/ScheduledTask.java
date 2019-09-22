@@ -1,37 +1,34 @@
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
+/**
+ * Used internally by implementations of {@link ScheduledTaskExecutor} which based on {@link DelayQueue}
+ * Used as a wrapper of {@link Callable} items (tasks) and provides results by returning FutureTask<T> {@code getTask()}
+ * Compared to each other by {@code compareTo()} method. By executionTime and then by creationTime.
+ */
 public class ScheduledTask<T> implements Delayed {
     private final LocalDateTime creationTime;
     private LocalDateTime executionTime;
     private FutureTask<T> task;
 
 
-    public ScheduledTask(LocalDateTime executionTime, FutureTask<T> task) {
+    ScheduledTask(LocalDateTime executionTime, FutureTask<T> task) {
         this.creationTime = LocalDateTime.now();
         this.executionTime = executionTime;
         this.task = task;
     }
 
-    public void setToRunNow(){
+    void setToRunNow() {
         executionTime = LocalDateTime.now();
     }
 
-//    private long getDelayMillis() {
-//        return ChronoUnit.MILLIS.between(LocalDateTime.now(),
-//                executionTime.minusNanos(TimeUnit.MILLISECONDS.toNanos(correction)));
-//
-//    }
-
-    protected long getDelayMillis() {
+    long getDelayMillis() {
         return ChronoUnit.MILLIS.between(LocalDateTime.now(), executionTime);
 
     }
 
-    public FutureTask<T> getTask() {
+    FutureTask<T> getTask() {
         return this.task;
     }
 
