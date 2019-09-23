@@ -46,4 +46,27 @@ The second case of the problem described above is system overloading:
 
 In this case it's up to the client to decide whether his system overloaded or not. Thus there is an option in API of 
 ScheduledTaskExecutor to setup a threshold - critical number of waiting tasks in the buffer (by default it's 8). Once it crossed the next tasks will be executed immediately without waiting for scheduled time. This process will continue untill the threshold is rised or crossed back (i.e an amount of awaiting tasks reduced below the threshold).
- 
+
+```
+   ScheduledTaskExecutor executor = new QueueBasedTaskExecutor();
+   executor.setThreshold(100);
+```
+On each taks schedule request and on each task completion there is check if threshold is crossed - `needToPrioritize()` method.
+If it's crossed prioritize() method called:
+
+```
+private synchronized void prioritize() {
+        if (needToPrioritize()) {
+            ScheduledTask nextTask = getNextTask();
+            if(nextTask != null) {
+                LOG.info("Prioritizing next task: " + nextTask);
+                scheduledTasks.remove(nextTask);
+                nextTask.setToRunNow();
+                scheduledTasks.put(nextTask);
+            }
+        }
+    }
+```
+
+Basically, this method removes the head of the DelayQueue<ScheduledTask>, sets its delay to zero by calling `setToRunNow()` method
+and puts it back to the queue.
